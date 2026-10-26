@@ -1,0 +1,140 @@
+-- ============================================================
+-- Question 12
+-- Write a query to find the name (first_name, last_name) of the employees who are not supervisors.
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- Setup (database + tables + sample data)
+-- ------------------------------------------------------------
+CREATE DATABASE IF NOT EXISTS hr;
+USE hr;
+
+
+-- Extra tables: countries, locations, departments
+DROP TABLE IF EXISTS departments;
+DROP TABLE IF EXISTS locations;
+DROP TABLE IF EXISTS countries;
+
+CREATE TABLE countries (
+    country_id   CHAR(2)     NOT NULL,
+    country_name VARCHAR(40),
+    PRIMARY KEY (country_id)
+) ENGINE = InnoDB;
+
+CREATE TABLE locations (
+    location_id    INT NOT NULL,
+    street_address VARCHAR(40),
+    postal_code    VARCHAR(12),
+    city           VARCHAR(30) NOT NULL,
+    state_province VARCHAR(25),
+    country_id     CHAR(2),
+    PRIMARY KEY (location_id)
+) ENGINE = InnoDB;
+
+CREATE TABLE departments (
+    department_id   INT NOT NULL,
+    department_name VARCHAR(30) NOT NULL,
+    manager_id      INT,
+    location_id     INT,
+    PRIMARY KEY (department_id)
+) ENGINE = InnoDB;
+
+INSERT INTO countries VALUES
+('US', 'United States of America'),
+('CA', 'Canada'),
+('UK', 'United Kingdom'),
+('DE', 'Germany');
+
+INSERT INTO locations VALUES
+(1400, '2014 Jabberwocky Rd',  '26192',   'Southlake',         'Texas',      'US'),
+(1500, '2011 Interiors Blvd',  '99236',   'South San Francisco','California','US'),
+(1700, '2004 Charade Rd',      '98199',   'Seattle',           'Washington', 'US'),
+(1800, '147 Spadina Ave',      'M5V 2L7', 'Toronto',           'Ontario',    'CA'),
+(2400, '8204 Arthur St',       NULL,      'London',            NULL,         'UK'),
+(2700, 'Schwanthalerstr. 7031','80925',   'Munich',            'Bavaria',    'DE');
+
+-- department 80 (Sales) aur 120 (Treasury) me koi employee nahi hai (Q19 ke liye)
+INSERT INTO departments VALUES
+(10,  'Administration',    125, 1700),
+(20,  'Marketing',         126, 1800),
+(30,  'Purchasing',        112, 1700),
+(40,  'Human Resources',   128, 2400),
+(50,  'Shipping',          118, 1500),
+(60,  'IT',                103, 1400),
+(70,  'Public Relations',  129, 2700),
+(80,  'Sales',             NULL, 2400),
+(90,  'Executive',         100, 1700),
+(100, 'Finance',           108, 1700),
+(110, 'Accounting',        130, 1700),
+(120, 'Treasury',          NULL, 1700);
+
+-- Practice ke liye employees table (standard hr structure) + sample data
+DROP TABLE IF EXISTS employees;
+CREATE TABLE employees (
+    employee_id    INT           NOT NULL,
+    first_name     VARCHAR(20),
+    last_name      VARCHAR(25)   NOT NULL,
+    email          VARCHAR(25)   NOT NULL,
+    phone_number   VARCHAR(20),
+    hire_date      DATE          NOT NULL,
+    job_id         VARCHAR(10)   NOT NULL,
+    salary         DECIMAL(8,2),
+    commission_pct DECIMAL(2,2),
+    manager_id     INT,
+    department_id  INT,
+    PRIMARY KEY (employee_id)
+) ENGINE = InnoDB;
+
+INSERT INTO employees VALUES
+(100, 'Steven',    'King',      'SKING',     '515.123.4567', '1987-06-17', 'AD_PRES',    24000.00, NULL, NULL, 90),
+(101, 'Neena',     'Kochhar',   'NKOCHHAR',  '515.123.4568', '1989-09-21', 'AD_VP',      17000.00, NULL, 100,  90),
+(102, 'Lex',       'De Haan',   'LDEHAAN',   '515.123.4569', '1993-01-13', 'AD_VP',      17000.00, NULL, 100,  90),
+(103, 'Alexander', 'Hunold',    'AHUNOLD',   '590.423.4567', '1990-01-03', 'IT_PROG',     9000.00, NULL, 102,  60),
+(104, 'Bruce',     'Ernst',     'BERNST',    '590.423.4568', '1991-05-21', 'IT_PROG',     6000.00, NULL, 103,  60),
+(105, 'David',     'Austin',    'DAUSTIN',   '590.423.4569', '1997-06-25', 'IT_PROG',     4800.00, NULL, 103,  60),
+(106, 'Valli',     'Pataballa', 'VPATABAL',  '590.423.4560', '1998-02-05', 'IT_PROG',     4500.00, NULL, 103,  60),
+(107, 'Diana',     'Lorentz',   'DLORENTZ',  '590.423.5567', '1999-02-07', 'IT_PROG',     4200.00, NULL, 103,  60),
+(108, 'Nancy',     'Greenberg', 'NGREENBE',  '515.124.4569', '1994-08-17', 'FI_MGR',     12008.00, NULL, 101, 100),
+(109, 'Daniel',    'Faviet',    'DFAVIET',   '515.124.4169', '1994-08-16', 'FI_ACCOUNT',  9000.00, NULL, 108, 100),
+(110, 'John',      'Chen',      'JCHEN',     '515.124.4269', '1997-09-28', 'FI_ACCOUNT',  8200.00, NULL, 108, 100),
+(111, 'Ismael',    'Sciarra',   'ISCIARRA',  '515.124.4369', '1997-09-30', 'FI_ACCOUNT',  7700.00, NULL, 108, 100),
+(112, 'Den',       'Raphaely',  'DRAPHEAL',  '515.127.4561', '1994-12-07', 'PU_MAN',     11000.00, NULL, 100,  30),
+(113, 'Alexander', 'Khoo',      'AKHOO',     '515.127.4562', '1995-05-18', 'PU_CLERK',    3100.00, NULL, 112,  30),
+(114, 'Shelli',    'Baida',     'SBAIDA',    '515.127.4563', '1997-12-24', 'PU_CLERK',    2900.00, NULL, 112,  30),
+(115, 'Sigal',     'Tobias',    'STOBIAS',   '515.127.4564', '1997-07-24', 'PU_CLERK',    2800.00, NULL, 112,  30),
+(116, 'Guy',       'Himuro',    'GHIMURO',   '515.127.4565', '1998-11-15', 'PU_CLERK',    2600.00, NULL, 112,  30),
+(117, 'Karen',     'Colmenares','KCOLMENA',  '515.127.4566', '1999-08-10', 'PU_CLERK',    2500.00, NULL, 112,  30),
+(118, 'Matthew',   'Weiss',     'MWEISS',    '650.123.1234', '1996-07-18', 'ST_MAN',      8000.00, NULL, 100,  50),
+(119, 'Adam',      'Fripp',     'AFRIPP',    '650.123.2234', '1997-04-10', 'ST_MAN',      8200.00, NULL, 100,  50),
+(120, 'Julia',     'Nayer',     'JNAYER',    '650.124.1214', '1997-07-16', 'SH_CLERK',    3200.00, NULL, 118,  50),
+(121, 'Irene',     'Mikkilineni','IMIKKILI', '650.124.1224', '1998-09-28', 'SH_CLERK',    2700.00, NULL, 118,  50),
+(122, 'Winston',   'Taylor',    'WTAYLOR',   '650.507.9876', '1998-01-24', 'SH_CLERK',    3200.00, NULL, 120,  50),
+(123, 'Jean',      'Fleaur',    'JFLEAUR',   '650.507.9877', '1998-02-23', 'SH_CLERK',    3100.00, NULL, 120,  50),
+(124, 'Martha',    'Sullivan',  'MSULLIVA',  '650.507.9878', '1996-06-21', 'SH_CLERK',    2500.00, NULL, 120,  50),
+(125, 'Jennifer',  'Whalen',    'JWHALEN',   '515.123.4444', '1987-09-17', 'AD_ASST',     4400.00, NULL, 101,  10),
+(126, 'Michael',   'Hartstein', 'MHARTSTE',  '515.123.5555', '1996-02-17', 'MK_MAN',     13000.00, NULL, 100,  20),
+(127, 'Pat',       'Fay',       'PFAY',      '603.123.6666', '1997-08-17', 'MK_REP',      6000.00, NULL, 126,  20),
+(128, 'Susan',     'Mavris',    'SMAVRIS',   '515.123.7777', '1994-06-07', 'HR_REP',      6500.00, NULL, 101,  40),
+(129, 'Hermann',   'Baer',      'HBAER',     '515.123.8888', '1994-06-07', 'PR_REP',     10000.00, NULL, 101,  70),
+(130, 'Shelley',   'Higgins',   'SHIGGINS',  '515.123.8080', '1994-06-07', 'AC_MGR',     12008.00, NULL, 101, 110),
+(131, 'William',   'Gietz',     'WGIETZ',    '515.123.8181', '1994-06-07', 'AC_ACCOUNT',  8300.00, NULL, 130, 110),
+(132, 'Mary',      'Blake',     'MBLAKE',    '590.423.7001', '1995-03-03', 'IT_PROG',    10000.00, NULL, 103,  60),
+(133, 'Tom',       'Scott',     'TSCOTT',    '590.423.7002', '1996-04-04', 'IT_PROG',    15000.00, NULL, 103,  60),
+(134, 'Henry',     'Ford',      'HFORD',     '650.124.7003', '1992-05-05', 'SH_CLERK',    4500.00, NULL, 120,  50),
+(135, 'Rebecca',   'Lane',      'RLANE',     '650.124.7004', '1999-01-01', 'SH_CLERK',    3000.00, NULL, 120,  50),
+(136, 'Kevin',     'Feeney',    'KFEENEY',   '650.507.9822', '1998-05-23', 'SH_CLERK',    3000.00, NULL, 120,  50),
+(137, 'Donald',    'OConnell',  'DOCONNEL',  '650.507.9833', '1999-06-21', 'SH_CLERK',    2600.00, NULL, 120,  50),
+(138, 'Alexis',    'Bull',      'ABULL',     '650.509.2876', '1997-02-20', 'SH_CLERK',    4100.00, NULL, 120,  50),
+(139, 'Kelly',     'Bell',      'KBELL',     '650.509.1876', '1996-02-04', 'SH_CLERK',    4000.00, NULL, 120,  50);
+
+-- ------------------------------------------------------------
+-- Query
+-- ------------------------------------------------------------
+-- NOTE: subquery me manager_id IS NOT NULL zaroori hai.
+-- NOT IN ke saath agar NULL aa jaye to poori query empty result deti hai.
+SELECT first_name,
+       last_name
+FROM employees
+WHERE employee_id NOT IN (SELECT DISTINCT manager_id
+                          FROM employees
+                          WHERE manager_id IS NOT NULL);
